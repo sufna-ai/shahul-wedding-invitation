@@ -73,13 +73,15 @@ export class App implements OnInit, OnDestroy {
   constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
 
   ngOnInit(): void {
-    this.isBrowser = isPlatformBrowser(this.platformId);
-    this.updateCountdown();
+  this.isBrowser = isPlatformBrowser(this.platformId);
 
-    if (this.isBrowser) {
-      this.intervalId = setInterval(() => this.updateCountdown(), 1000);
-    }
+  if (this.isBrowser) {
+    this.updateCountdown();
+    this.intervalId = window.setInterval(() => {
+      this.updateCountdown();
+    }, 1000);
   }
+}
 
   ngOnDestroy(): void {
     if (this.intervalId) {
@@ -126,22 +128,33 @@ getExcitement() {
   }
 
   updateCountdown(): void {
-    const targetDate = new Date('2026-04-12T00:00:00+05:30').getTime();
-    const now = new Date().getTime();
-    const diff = targetDate - now;
+  if (!this.isBrowser) return;
 
-    if (diff <= 0) {
-      this.timeLeft = { days: 0, hours: 0, minutes: 0, seconds: 0 };
-      return;
-    }
+  const targetDate = new Date('2026-04-12T00:00:00+05:30').getTime();
+  const now = Date.now();
+  const diff = targetDate - now;
 
+  if (diff <= 0) {
     this.timeLeft = {
-      days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-      hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
-      minutes: Math.floor((diff / (1000 * 60)) % 60),
-      seconds: Math.floor((diff / 1000) % 60),
+      days: 0,
+      hours: 0,
+      minutes: 0,
+      seconds: 0,
     };
+
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+    }
+    return;
   }
+
+  this.timeLeft = {
+    days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+    hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+    minutes: Math.floor((diff / (1000 * 60)) % 60),
+    seconds: Math.floor((diff / 1000) % 60),
+  };
+}
 
   submitWish(): void {
     const name = this.form.name.trim();
